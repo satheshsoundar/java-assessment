@@ -1,0 +1,55 @@
+version: "3.7"
+services:
+  kong:
+    container_name: kong-gateway
+    image: kong:latest
+    volumes:
+      - ./kong.yml:/usr/local/kong/declarative/kong.yml
+    environment:
+      - KONG_DATABASE=off
+      - KONG_DECLARATIVE_CONFIG=/usr/local/kong/declarative/kong.yml
+      - KONG_PROXY_ACCESS_LOG=/dev/stdout
+      - KONG_ADMIN_ACCESS_LOG=/dev/stdout
+      - KONG_PROXY_ERROR_LOG=/dev/stderr
+      - KONG_ADMIN_ERROR_LOG=/dev/stderr
+      - KONG_ADMIN_LISTEN=0.0.0.0:8001, 0.0.0.0:8444 ssl
+    ports:
+      - "8000:8000"
+      - "8443:8443"
+      - "127.0.0.1:8001:8001"
+      - "127.0.0.1:8444:8444"
+    networks:
+      - backend
+  cart-service:
+    container_name: cart-service
+    build:
+      context: ./cart-service
+      args:
+        env: "docker"
+    ports:
+      - "8081:8081"
+    networks:
+      - backend
+
+  product-service:
+    container_name: product-service
+    build: ./product-service
+    ports:
+      - "8083:8083"
+    networks:
+      - backend
+
+  customer-service:
+    container_name: customer-service
+    build: ./customer-service
+    links:
+      - cart-service
+      - product-service
+    ports:
+      - "8082:8082"
+    networks:
+      - backend
+networks:
+  backend:
+    name: backend
+    driver: bridge
