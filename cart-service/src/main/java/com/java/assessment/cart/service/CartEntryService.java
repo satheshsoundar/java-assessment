@@ -32,10 +32,7 @@ public class CartEntryService {
         if(!entry.isPresent()) {
             throw new EntryNotFoundException("Entry not found");
         }
-        entry.get().setQuantity(entryDTO.getQuantity());
-        entry.get().setTotal(entryDTO.getPrice().multiply(BigDecimal.valueOf(entryDTO.getQuantity()))
-                               .setScale(2, RoundingMode.HALF_UP));
-        saveCartEntry(entry.get());
+        deleteCartEntry(entry.get());
         return entry;
     }
 
@@ -53,5 +50,9 @@ public class CartEntryService {
 
     public Entry saveCartEntry(Entry entry) {
         return cartEntryRepository.save(entry);
+    }
+
+    public void deleteCartEntry(Entry entry) {
+        cartEntryRepository.delete(entry);
     }
 }

@@ -12,7 +12,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -110,9 +112,41 @@ public class CustomerCartService {
         String cartCode = restTemplate.
                 getForObject("http://kong-gateway:8000/cart-service/api/carts/customer/"+customerId+"/cart-code"
                         , String.class);
+        Map<String, String > params = new HashMap<>();
+        params.put("cartCode", cartCode);
+        restTemplate.put("http://kong-gateway:8000/cart-service/api/carts/{cartCode}/entries"
+                , entryDto, params);
+        return entryDto;
+    }
 
-        restTemplate.put("http://kong-gateway:8000/cart-service/api/carts/"+ cartCode + "/entries"
+    public EntryDto deleteProductInCart(Long customerId, EntryDto entryDto) throws CartNotFoundException {
+
+        CartDto cartDto = restTemplate.
+                getForObject("http://kong-gateway:8000/cart-service/api/carts/customer/"+customerId
+                        , CartDto.class);
+
+        if (cartDto == null) {
+            throw new CartNotFoundException("Active Cart Not Found");
+        }
+
+        restTemplate.delete("http://kong-gateway:8000/cart-service/api/carts/"+ cartDto.getCode() + "/entries"
                 , entryDto);
         return entryDto;
+    }
+
+
+    public CartDto checkoutCart(Long customerId) throws CartNotFoundException {
+        CartDto cartDto = restTemplate.
+                getForObject("http://kong-gateway:8000/cart-service/api/carts/customer/"+customerId
+                        , CartDto.class);
+
+        if (cartDto == null) {
+            throw new CartNotFoundException("Active Cart Not Found");
+        }
+        cartDto.setActive(true);
+
+        Map<String, String > params = new HashMap<>();
+        restTemplate.put("http://kong-gateway:8000/cart-service/api/carts/checkout", cartDto, params);
+        return cartDto;
     }
 }

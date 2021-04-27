@@ -4,6 +4,7 @@ import com.java.assessment.cart.exception.CartEntryException;
 import com.java.assessment.cart.beans.Cart;
 import com.java.assessment.cart.beans.Entry;
 import com.java.assessment.cart.dto.EntryDTO;
+import com.java.assessment.cart.exception.CartNotFoundException;
 import com.java.assessment.cart.exception.EntryNotFoundException;
 import com.java.assessment.cart.repository.CartEntryRepository;
 import com.java.assessment.cart.repository.CartRepository;
@@ -51,6 +52,13 @@ public class CartService {
     }
 
     public Optional<Entry> updateItemInCart(EntryDTO entryDTO) throws EntryNotFoundException {
+        Optional<Entry> entry =  cartEntryService.updateItemInCart(entryDTO);
+        recalculateCart(entry.get().getCart(), entry.get().getCart().getEntriesList());
+        saveCart(entry.get().getCart());
+        return entry;
+    }
+
+    public Optional<Entry> deleteItemInCart(EntryDTO entryDTO) throws EntryNotFoundException {
         Optional<Entry> entry =  cartEntryService.updateItemInCart(entryDTO);
         recalculateCart(entry.get().getCart(), entry.get().getCart().getEntriesList());
         saveCart(entry.get().getCart());
@@ -108,7 +116,18 @@ public class CartService {
         Long shippingAddress = restTemplate.getForObject(customerBaseURL+"shipping", Long.class);
         cart.setBillingAddress(billingAddress);
         cart.setShippingAddress(shippingAddress);
+        System.out.println("Saving Cart" + cart.getCode());
         saveCart(cart);
         return cart;
+    }
+
+    public Cart checkoutCart(Cart cartOld) throws CartNotFoundException {
+        Optional<Cart> cartOptional = cartRepository.findCartByCode(cartOld.getCode());
+        if (!cartOptional.isPresent()) {
+            throw new CartNotFoundException("Cart Not Found");
+        }
+        Cart cart = cartOptional.get();
+        cart.setActive(false);
+        return saveCart(cart);
     }
 }

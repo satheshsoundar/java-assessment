@@ -1,6 +1,7 @@
 package com.java.assessment.customer.controller;
 
 
+import com.java.assessment.customer.dto.CartDto;
 import com.java.assessment.customer.dto.CustomerCartDto;
 import com.java.assessment.customer.dto.EntryDto;
 import com.java.assessment.customer.exception.CartNotFoundException;
@@ -39,5 +40,15 @@ public class CustomerCartController {
     @PutMapping("/customer/cart/{customer-id}/product")
     public EntryDto updateProductToCart(@PathVariable("customer-id") Long customerId, @RequestBody EntryDto entryDto) throws CartNotFoundException {
         return customerCartService.updateProductToCart( customerId, entryDto );
+    }
+
+    @DeleteMapping("/customer/cart/{customer-id}/product")
+    public EntryDto deleteProductToCart(@PathVariable("customer-id") Long customerId, @RequestBody EntryDto entryDto) throws CartNotFoundException {
+        return customerCartService.deleteProductInCart( customerId, entryDto );
+    }
+
+    @PutMapping("/customer/cart/checkout/{customer-id}")
+    public CartDto checkoutCart(@PathVariable("customer-id") Long customerId) throws CartNotFoundException {
+        return customerCartService.checkoutCart( customerId);
     }
 }
